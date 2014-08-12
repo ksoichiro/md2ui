@@ -18,6 +18,7 @@ type Inline struct {
 	Href    string
 	Value   string
 	NewLine bool
+	Eol     bool
 }
 
 type MarkdownConverter interface {

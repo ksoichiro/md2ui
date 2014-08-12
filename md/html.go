@@ -3,6 +3,8 @@
 
 package md
 
+import "strings"
+
 type HtmlConverter struct {
 }
 
@@ -44,6 +46,12 @@ func (c *HtmlConverter) constructInlines(content []Inline) string {
 		} else {
 			s += i.Value
 		}
+		if i.Eol {
+			s += "\n"
+		}
+	}
+	if strings.HasSuffix(s, "\n") {
+		s = strings.TrimSuffix(s, "\n")
 	}
 	return s
 }

@@ -70,7 +70,7 @@ func Parse(lines string, c MarkdownConverter) (md Markdown) {
 				buf = append(buf, parseInline(strings.TrimSuffix(s, "  "))...)
 				buf = append(buf, Inline{NewLine: true})
 			} else {
-				buf = append(buf, parseInline(s)...)
+				buf = append(buf, parseInlineWithEol(s, true)...)
 			}
 		}
 	}
@@ -81,17 +81,24 @@ func Parse(lines string, c MarkdownConverter) (md Markdown) {
 }
 
 func parseInline(content string) (result []Inline) {
+	return parseInlineWithEol(content, false)
+}
+func parseInlineWithEol(content string, appendEol bool) (result []Inline) {
 	tmp := content
 	for {
 		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
 		groups := exp.FindStringSubmatch(tmp)
 		if groups == nil || len(groups) < 1 {
-			return append(result, Inline{Value: tmp})
+			result = append(result, Inline{Value: tmp})
+			break
 		} else {
 			result = append(result, Inline{Value: groups[1]})
 			result = append(result, Inline{Href: groups[3], Value: groups[2]})
 			tmp = groups[4]
 		}
+	}
+	if appendEol && 0 < len(result) {
+		result[len(result)-1].Eol = true
 	}
 	return result
 }
