@@ -30,6 +30,18 @@ func Parse(opt *Options, c MarkdownConverter) (md Markdown) {
 		} else if strings.HasPrefix(s, "## ") {
 			// H2
 			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: parseInline(strings.TrimPrefix(s, "## "))})
+		} else if strings.HasPrefix(s, "### ") {
+			// H3
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH3, Values: parseInline(strings.TrimPrefix(s, "### "))})
+		} else if strings.HasPrefix(s, "#### ") {
+			// H4
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH4, Values: parseInline(strings.TrimPrefix(s, "#### "))})
+		} else if strings.HasPrefix(s, "##### ") {
+			// H5
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH5, Values: parseInline(strings.TrimPrefix(s, "##### "))})
+		} else if strings.HasPrefix(s, "###### ") {
+			// H6
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH6, Values: parseInline(strings.TrimPrefix(s, "###### "))})
 		} else if s == "" {
 			if 0 < len(buf) {
 				// End of paragraph

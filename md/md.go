@@ -28,5 +28,9 @@ type Inline struct {
 type MarkdownConverter interface {
 	ToH1(content []Inline) string
 	ToH2(content []Inline) string
+	ToH3(content []Inline) string
+	ToH4(content []Inline) string
+	ToH5(content []Inline) string
+	ToH6(content []Inline) string
 	ToP(content []Inline) string
 }

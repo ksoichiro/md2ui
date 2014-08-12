@@ -14,6 +14,22 @@ func (c *HtmlConverter) ToH2(content []Inline) string {
 	return "<h2>" + c.constructInlines(content) + "</h2>"
 }
 
+func (c *HtmlConverter) ToH3(content []Inline) string {
+	return "<h3>" + c.constructInlines(content) + "</h3>"
+}
+
+func (c *HtmlConverter) ToH4(content []Inline) string {
+	return "<h4>" + c.constructInlines(content) + "</h4>"
+}
+
+func (c *HtmlConverter) ToH5(content []Inline) string {
+	return "<h5>" + c.constructInlines(content) + "</h5>"
+}
+
+func (c *HtmlConverter) ToH6(content []Inline) string {
+	return "<h6>" + c.constructInlines(content) + "</h6>"
+}
+
 func (c *HtmlConverter) ToP(content []Inline) string {
 	return "<p>" + c.constructInlines(content) + "</p>"
 }
