@@ -10,6 +10,18 @@
 
 ###### H6 header
 
+#H1 header Close #
+
+## H2 header Close ## 
+
+### H3 header Double close # ##
+
+#### H4 header number of close chars is greater than open #####
+
+##### H5 header no space between last word and close chars#####
+
+###### H6 header number of close chars is less than open #
+
 H1 header
 =
 

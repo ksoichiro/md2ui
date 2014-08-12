@@ -27,22 +27,22 @@ func Parse(lines string, c MarkdownConverter) (md Markdown) {
 	for _, s := range strings.Split(lines, "\n") {
 		if strings.HasPrefix(s, "# ") {
 			// H1
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: parseInline(strings.TrimPrefix(s, "# "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "## ") {
 			// H2
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: parseInline(strings.TrimPrefix(s, "## "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "### ") {
 			// H3
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH3, Values: parseInline(strings.TrimPrefix(s, "### "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH3, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "#### ") {
 			// H4
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH4, Values: parseInline(strings.TrimPrefix(s, "#### "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH4, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "##### ") {
 			// H5
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH5, Values: parseInline(strings.TrimPrefix(s, "##### "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH5, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "###### ") {
 			// H6
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH6, Values: parseInline(strings.TrimPrefix(s, "###### "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH6, Values: parseInline(trimHeaderChars(s))})
 		} else if s == "" {
 			if 0 < len(buf) {
 				// End of paragraph
@@ -92,6 +92,30 @@ func parseInline(content string) (result []Inline) {
 			result = append(result, Inline{Href: groups[3], Value: groups[2]})
 			tmp = groups[4]
 		}
+	}
+	return result
+}
+
+func trimHeaderChars(content string) string {
+	result := content
+	for strings.HasPrefix(result, " ") {
+		result = strings.TrimPrefix(result, " ")
+	}
+	for strings.HasPrefix(result, "#") {
+		result = strings.TrimPrefix(result, "#")
+	}
+	for strings.HasPrefix(result, " ") {
+		result = strings.TrimPrefix(result, " ")
+	}
+
+	for strings.HasSuffix(result, " ") {
+		result = strings.TrimSuffix(result, " ")
+	}
+	for strings.HasSuffix(result, "#") {
+		result = strings.TrimSuffix(result, "#")
+	}
+	for strings.HasSuffix(result, " ") {
+		result = strings.TrimSuffix(result, " ")
 	}
 	return result
 }
