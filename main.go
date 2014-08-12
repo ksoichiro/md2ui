@@ -24,6 +24,7 @@ func main() {
 
 	if *in == "" {
 		fmt.Println("Input file name(-in) is required.")
+		flag.Usage()
 		return
 	}
 
