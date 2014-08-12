@@ -3,11 +3,6 @@
 
 package md
 
-type Options struct {
-	InFile string
-	Lang   string
-}
-
 type Markdown struct {
 	Elements []MarkdownElement
 }

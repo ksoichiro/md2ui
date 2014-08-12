@@ -17,11 +17,6 @@ func main() {
 	)
 	flag.Parse()
 
-	opt := md.Options{
-		InFile: *in,
-		Lang:   *lang,
-	}
-
 	if *in == "" {
 		fmt.Println("Input file name(-in) is required.")
 		flag.Usage()
@@ -29,14 +24,14 @@ func main() {
 	}
 
 	var c md.MarkdownConverter
-	switch opt.Lang {
+	switch *lang {
 	case "html":
 		fallthrough
 	default:
 		c = &md.HtmlConverter{}
 	}
 
-	result := md.Parse(&opt, c)
+	result := md.ParseFile(*in, c)
 
 	for _, e := range result.Elements {
 		fmt.Println(e.ConverterFunc(e.Values))

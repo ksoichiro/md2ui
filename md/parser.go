@@ -7,23 +7,24 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
 
-func Parse(opt *Options, c MarkdownConverter) (md Markdown) {
-	filename := filepath.Join(opt.InFile)
-	file, err := os.Open(filename)
+func ParseFile(path string, c MarkdownConverter) (md Markdown) {
+	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println("Error opening file", err)
 		return
 	}
 	defer file.Close()
-
 	b, _ := ioutil.ReadAll(file)
+	return Parse(string(b), c)
+}
+
+func Parse(lines string, c MarkdownConverter) (md Markdown) {
 	buf := []Inline{}
-	for _, s := range strings.Split(string(b), "\n") {
+	for _, s := range strings.Split(lines, "\n") {
 		if strings.HasPrefix(s, "# ") {
 			// H1
 			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: parseInline(strings.TrimPrefix(s, "# "))})
