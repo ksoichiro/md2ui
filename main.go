@@ -13,14 +13,12 @@ import (
 func main() {
 	var (
 		in   = flag.String("in", "", "Input Markdown file")
-		out  = flag.String("out", "out", "Output directory for generated codes")
 		lang = flag.String("lang", "html", "Output language: Available: html")
 	)
 	flag.Parse()
 
 	opt := md.Options{
 		InFile: *in,
-		OutDir: *out,
 		Lang:   *lang,
 	}
 

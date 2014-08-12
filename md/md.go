@@ -5,7 +5,6 @@ package md
 
 type Options struct {
 	InFile string
-	OutDir string
 	Lang   string
 }
 
