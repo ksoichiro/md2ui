@@ -29,11 +29,11 @@ type Markdown struct {
 }
 
 type MarkdownElement struct {
-	H1     bool
-	H2     bool
-	P      bool
-	Values []Inline
+	ConverterFunc ConverterFunc
+	Values        []Inline
 }
+
+type ConverterFunc func(values []Inline) string
 
 type Inline struct {
 	Href    string
@@ -60,8 +60,6 @@ func main() {
 		return
 	}
 
-	md := parse(&opt)
-
 	var c MarkdownConverter
 	switch opt.Lang {
 	case "html":
@@ -70,18 +68,14 @@ func main() {
 		c = &HtmlConverter{}
 	}
 
+	md := parse(&opt, c)
+
 	for _, e := range md.Elements {
-		if e.H1 {
-			fmt.Println(c.ToH1(e.Values))
-		} else if e.H2 {
-			fmt.Println(c.ToH2(e.Values))
-		} else if e.P {
-			fmt.Println(c.ToP(e.Values))
-		}
+		fmt.Println(e.ConverterFunc(e.Values))
 	}
 }
 
-func parse(opt *Options) (md Markdown) {
+func parse(opt *Options, c MarkdownConverter) (md Markdown) {
 	filename := filepath.Join(opt.InFile)
 	file, err := os.Open(filename)
 	if err != nil {
@@ -95,14 +89,14 @@ func parse(opt *Options) (md Markdown) {
 	for _, s := range strings.Split(string(b), "\n") {
 		if strings.HasPrefix(s, "# ") {
 			// H1
-			md.Elements = append(md.Elements, MarkdownElement{H1: true, Values: parseInline(strings.TrimPrefix(s, "# "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: parseInline(strings.TrimPrefix(s, "# "))})
 		} else if strings.HasPrefix(s, "## ") {
 			// H2
-			md.Elements = append(md.Elements, MarkdownElement{H2: true, Values: parseInline(strings.TrimPrefix(s, "## "))})
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: parseInline(strings.TrimPrefix(s, "## "))})
 		} else if s == "" {
 			if 0 < len(buf) {
 				// End of paragraph
-				md.Elements = append(md.Elements, MarkdownElement{P: true, Values: buf})
+				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
 				buf = []Inline{}
 			}
 		} else {
@@ -117,7 +111,7 @@ func parse(opt *Options) (md Markdown) {
 		}
 	}
 	if 0 < len(buf) {
-		md.Elements = append(md.Elements, MarkdownElement{P: true, Values: buf})
+		md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
 	}
 	return
 }
