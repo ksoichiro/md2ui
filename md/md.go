@@ -1,7 +1,13 @@
 // Copyright (c) 2014 Soichiro Kashima
 // Licensed under MIT license.
 
-package converter
+package md
+
+type Options struct {
+	InFile string
+	OutDir string
+	Lang   string
+}
 
 type Markdown struct {
 	Elements []MarkdownElement

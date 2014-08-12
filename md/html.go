@@ -1,4 +1,7 @@
-package converter
+// Copyright (c) 2014 Soichiro Kashima
+// Licensed under MIT license.
+
+package md
 
 type HtmlConverter struct {
 }

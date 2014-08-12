@@ -7,19 +7,13 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ksoichiro/md2ui/converter"
+	"github.com/ksoichiro/md2ui/md"
 )
 
 const (
 	ExitCodeSuccess = 0
 	ExitCodeError   = 1
 )
-
-type Options struct {
-	InFile string
-	OutDir string
-	Lang   string
-}
 
 func main() {
 	var (
@@ -29,7 +23,7 @@ func main() {
 	)
 	flag.Parse()
 
-	opt := Options{
+	opt := md.Options{
 		InFile: *in,
 		OutDir: *out,
 		Lang:   *lang,
@@ -40,17 +34,17 @@ func main() {
 		return
 	}
 
-	var c converter.MarkdownConverter
+	var c md.MarkdownConverter
 	switch opt.Lang {
 	case "html":
 		fallthrough
 	default:
-		c = &converter.HtmlConverter{}
+		c = &md.HtmlConverter{}
 	}
 
-	md := parse(&opt, c)
+	result := md.Parse(&opt, c)
 
-	for _, e := range md.Elements {
+	for _, e := range result.Elements {
 		fmt.Println(e.ConverterFunc(e.Values))
 	}
 }
