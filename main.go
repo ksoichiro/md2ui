@@ -10,11 +10,6 @@ import (
 	"github.com/ksoichiro/md2ui/md"
 )
 
-const (
-	ExitCodeSuccess = 0
-	ExitCodeError   = 1
-)
-
 func main() {
 	var (
 		in   = flag.String("in", "", "Input Markdown file")
