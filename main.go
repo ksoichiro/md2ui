@@ -29,21 +29,15 @@ type Markdown struct {
 }
 
 type MarkdownElement struct {
-	Level int
-	Order int
-	H1    string
-	H2    string
-	H3    string
-	H4    string
-	H5    string
-	H6    string
-	UL    string
-	LI    string
-	Child Markdown
-	P     []string
-	QUOTE []string
-	CODE  []string
-	HR    bool
+	H1 []Inline
+	H2 []Inline
+	P  []Inline
+}
+
+type Inline struct {
+	Href    string
+	Value   string
+	NewLine bool
 }
 
 func main() {
@@ -65,6 +59,8 @@ func main() {
 		return
 	}
 
+	md := parse(&opt)
+
 	var c MarkdownConverter
 	switch opt.Lang {
 	case "html":
@@ -73,86 +69,105 @@ func main() {
 		c = &HtmlConverter{}
 	}
 
-	parse(&opt, c)
+	for _, e := range md.Elements {
+		if 0 < len(e.H1) {
+			fmt.Println(c.ToH1(e.H1))
+		} else if 0 < len(e.H2) {
+			fmt.Println(c.ToH2(e.H2))
+		} else if 0 < len(e.P) {
+			fmt.Println(c.ToP(e.P))
+		}
+	}
 }
 
-func parse(opt *Options, c MarkdownConverter) {
+func parse(opt *Options) (md Markdown) {
 	filename := filepath.Join(opt.InFile)
-	md, err := os.Open(filename)
+	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Error opening file", err)
 		return
 	}
-	defer md.Close()
+	defer file.Close()
 
-	b, _ := ioutil.ReadAll(md)
-	buf := ""
+	b, _ := ioutil.ReadAll(file)
+	buf := []Inline{}
 	for _, s := range strings.Split(string(b), "\n") {
 		if strings.HasPrefix(s, "# ") {
 			// H1
-			fmt.Println(c.ToH1(c.ConvInline(strings.TrimPrefix(s, "# "))))
+			md.Elements = append(md.Elements, MarkdownElement{H1: parseInline(strings.TrimPrefix(s, "# "))})
 		} else if strings.HasPrefix(s, "## ") {
 			// H2
-			fmt.Println(c.ToH2(c.ConvInline(strings.TrimPrefix(s, "## "))))
+			md.Elements = append(md.Elements, MarkdownElement{H2: parseInline(strings.TrimPrefix(s, "## "))})
 		} else if s == "" {
-			if buf != "" {
+			if 0 < len(buf) {
 				// End of paragraph
-				fmt.Println(c.ToP(buf))
-				buf = ""
+				md.Elements = append(md.Elements, MarkdownElement{P: buf})
+				buf = []Inline{}
 			}
 		} else {
 			// P
 			if strings.HasSuffix(s, "  ") {
 				// New line
-				buf = buf + c.AddNewLine(c.ConvInline(strings.TrimSuffix(s, "  ")))
+				buf = append(buf, parseInline(strings.TrimSuffix(s, "  "))...)
+				buf = append(buf, Inline{NewLine: true})
 			} else {
-				buf = buf + c.ConvInline(s)
+				buf = append(buf, parseInline(s)...)
 			}
 		}
 	}
-	if buf != "" {
-		fmt.Println(buf)
-		buf = ""
+	if 0 < len(buf) {
+		md.Elements = append(md.Elements, MarkdownElement{P: buf})
 	}
+	return
+}
+
+func parseInline(content string) (result []Inline) {
+	tmp := content
+	for {
+		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
+		groups := exp.FindStringSubmatch(tmp)
+		if groups == nil || len(groups) < 1 {
+			return append(result, Inline{Value: tmp})
+		} else {
+			result = append(result, Inline{Value: groups[1]})
+			result = append(result, Inline{Href: groups[3], Value: groups[2]})
+			tmp = groups[4]
+		}
+	}
+	return result
 }
 
 type MarkdownConverter interface {
-	AddNewLine(content string) string
-	ToH1(content string) string
-	ToH2(content string) string
-	ToP(content string) string
-	ConvInline(content string) string
+	ToH1(content []Inline) string
+	ToH2(content []Inline) string
+	ToP(content []Inline) string
 }
 
 type HtmlConverter struct {
 }
 
-func (c *HtmlConverter) AddNewLine(content string) string {
-	return content + "<br />\n"
+func (c *HtmlConverter) ToH1(content []Inline) string {
+	return "<h1>" + c.constructInlines(content) + "</h1>"
 }
 
-func (c *HtmlConverter) ToH1(content string) string {
-	return "<h1>" + content + "</h1>"
+func (c *HtmlConverter) ToH2(content []Inline) string {
+	return "<h2>" + c.constructInlines(content) + "</h2>"
 }
 
-func (c *HtmlConverter) ToH2(content string) string {
-	return "<h2>" + content + "</h2>"
+func (c *HtmlConverter) ToP(content []Inline) string {
+	return "<p>" + c.constructInlines(content) + "</p>"
 }
 
-func (c *HtmlConverter) ToP(content string) string {
-	return "<p>" + content + "</p>"
-}
-
-func (c *HtmlConverter) ConvInline(content string) string {
-	result := content
-	for {
-		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
-		groups := exp.FindStringSubmatch(result)
-		if groups == nil || len(groups) < 1 {
-			return result
+func (c *HtmlConverter) constructInlines(content []Inline) string {
+	s := ""
+	for _, i := range content {
+		if i.NewLine {
+			s += "<br />"
+		} else if i.Href != "" {
+			s += "<a href=\"" + i.Href + "\">" + i.Value + "</a>"
 		} else {
-			result = groups[1] + "<a href=\"" + groups[3] + "\">" + groups[2] + "</a>" + groups[4]
+			s += i.Value
 		}
 	}
-	return result
+	return s
 }
