@@ -48,6 +48,20 @@ func Parse(opt *Options, c MarkdownConverter) (md Markdown) {
 				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
 				buf = []Inline{}
 			}
+		} else if 0 < len(buf) && strings.Replace(s, "=", "", -1) == "" {
+			// Last line is H1
+			if 1 < len(buf) {
+				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf[:len(buf)-1]})
+			}
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: buf[len(buf)-1:]})
+			buf = []Inline{}
+		} else if 0 < len(buf) && strings.Replace(s, "-", "", -1) == "" {
+			// Last line is H2
+			if 1 < len(buf) {
+				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf[:len(buf)-1]})
+			}
+			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: buf[len(buf)-1:]})
+			buf = []Inline{}
 		} else {
 			// P
 			if strings.HasSuffix(s, "  ") {
