@@ -21,6 +21,7 @@ const (
 type Options struct {
 	InFile string
 	OutDir string
+	Lang   string
 }
 
 type Markdown struct {
@@ -47,14 +48,16 @@ type MarkdownElement struct {
 
 func main() {
 	var (
-		in  = flag.String("in", "", "Input Markdown file")
-		out = flag.String("out", "out", "Output directory for generated codes")
+		in   = flag.String("in", "", "Input Markdown file")
+		out  = flag.String("out", "out", "Output directory for generated codes")
+		lang = flag.String("lang", "html", "Output language: Available: html")
 	)
 	flag.Parse()
 
 	opt := Options{
 		InFile: *in,
 		OutDir: *out,
+		Lang:   *lang,
 	}
 
 	if *in == "" {
@@ -62,10 +65,18 @@ func main() {
 		return
 	}
 
-	parse(&opt)
+	var c MarkdownConverter
+	switch opt.Lang {
+	case "html":
+		fallthrough
+	default:
+		c = &HtmlConverter{}
+	}
+
+	parse(&opt, c)
 }
 
-func parse(opt *Options) {
+func parse(opt *Options, c MarkdownConverter) {
 	filename := filepath.Join(opt.InFile)
 	md, err := os.Open(filename)
 	if err != nil {
@@ -77,26 +88,25 @@ func parse(opt *Options) {
 	b, _ := ioutil.ReadAll(md)
 	buf := ""
 	for _, s := range strings.Split(string(b), "\n") {
-		// FIXME This is just test codes. Not layout
 		if strings.HasPrefix(s, "# ") {
 			// H1
-			fmt.Println(toH1(convInline(strings.TrimPrefix(s, "# "))))
+			fmt.Println(c.ToH1(c.ConvInline(strings.TrimPrefix(s, "# "))))
 		} else if strings.HasPrefix(s, "## ") {
 			// H2
-			fmt.Println(toH2(convInline(strings.TrimPrefix(s, "## "))))
+			fmt.Println(c.ToH2(c.ConvInline(strings.TrimPrefix(s, "## "))))
 		} else if s == "" {
 			if buf != "" {
 				// End of paragraph
-				fmt.Println(toP(buf))
+				fmt.Println(c.ToP(buf))
 				buf = ""
 			}
 		} else {
 			// P
 			if strings.HasSuffix(s, "  ") {
 				// New line
-				buf = buf + addNewLine(convInline(strings.TrimSuffix(s, "  ")))
+				buf = buf + c.AddNewLine(c.ConvInline(strings.TrimSuffix(s, "  ")))
 			} else {
-				buf = buf + convInline(s)
+				buf = buf + c.ConvInline(s)
 			}
 		}
 	}
@@ -106,23 +116,34 @@ func parse(opt *Options) {
 	}
 }
 
-func addNewLine(content string) string {
+type MarkdownConverter interface {
+	AddNewLine(content string) string
+	ToH1(content string) string
+	ToH2(content string) string
+	ToP(content string) string
+	ConvInline(content string) string
+}
+
+type HtmlConverter struct {
+}
+
+func (c *HtmlConverter) AddNewLine(content string) string {
 	return content + "<br />\n"
 }
 
-func toH1(content string) string {
+func (c *HtmlConverter) ToH1(content string) string {
 	return "<h1>" + content + "</h1>"
 }
 
-func toH2(content string) string {
+func (c *HtmlConverter) ToH2(content string) string {
 	return "<h2>" + content + "</h2>"
 }
 
-func toP(content string) string {
+func (c *HtmlConverter) ToP(content string) string {
 	return "<p>" + content + "</p>"
 }
 
-func convInline(content string) string {
+func (c *HtmlConverter) ConvInline(content string) string {
 	result := content
 	for {
 		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
