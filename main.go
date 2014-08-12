@@ -29,9 +29,10 @@ type Markdown struct {
 }
 
 type MarkdownElement struct {
-	H1 []Inline
-	H2 []Inline
-	P  []Inline
+	H1     bool
+	H2     bool
+	P      bool
+	Values []Inline
 }
 
 type Inline struct {
@@ -70,12 +71,12 @@ func main() {
 	}
 
 	for _, e := range md.Elements {
-		if 0 < len(e.H1) {
-			fmt.Println(c.ToH1(e.H1))
-		} else if 0 < len(e.H2) {
-			fmt.Println(c.ToH2(e.H2))
-		} else if 0 < len(e.P) {
-			fmt.Println(c.ToP(e.P))
+		if e.H1 {
+			fmt.Println(c.ToH1(e.Values))
+		} else if e.H2 {
+			fmt.Println(c.ToH2(e.Values))
+		} else if e.P {
+			fmt.Println(c.ToP(e.Values))
 		}
 	}
 }
@@ -94,14 +95,14 @@ func parse(opt *Options) (md Markdown) {
 	for _, s := range strings.Split(string(b), "\n") {
 		if strings.HasPrefix(s, "# ") {
 			// H1
-			md.Elements = append(md.Elements, MarkdownElement{H1: parseInline(strings.TrimPrefix(s, "# "))})
+			md.Elements = append(md.Elements, MarkdownElement{H1: true, Values: parseInline(strings.TrimPrefix(s, "# "))})
 		} else if strings.HasPrefix(s, "## ") {
 			// H2
-			md.Elements = append(md.Elements, MarkdownElement{H2: parseInline(strings.TrimPrefix(s, "## "))})
+			md.Elements = append(md.Elements, MarkdownElement{H2: true, Values: parseInline(strings.TrimPrefix(s, "## "))})
 		} else if s == "" {
 			if 0 < len(buf) {
 				// End of paragraph
-				md.Elements = append(md.Elements, MarkdownElement{P: buf})
+				md.Elements = append(md.Elements, MarkdownElement{P: true, Values: buf})
 				buf = []Inline{}
 			}
 		} else {
@@ -116,7 +117,7 @@ func parse(opt *Options) (md Markdown) {
 		}
 	}
 	if 0 < len(buf) {
-		md.Elements = append(md.Elements, MarkdownElement{P: buf})
+		md.Elements = append(md.Elements, MarkdownElement{P: true, Values: buf})
 	}
 	return
 }
