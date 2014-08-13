@@ -26,6 +26,8 @@ func main() {
 
 	var c md.MarkdownConverter
 	switch *lang {
+	case "android":
+		c = &md.AndroidConverter{}
 	case "html":
 		fallthrough
 	default:
@@ -34,5 +36,5 @@ func main() {
 
 	result := md.ParseFile(*in, c)
 
-	fmt.Println(strings.Join(md.Convert(&result.Elements), "\n"))
+	fmt.Println(strings.Join(md.Convert(&result), "\n"))
 }

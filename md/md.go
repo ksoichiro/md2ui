@@ -4,7 +4,8 @@
 package md
 
 type Markdown struct {
-	Elements []MarkdownElement
+	Elements  []MarkdownElement
+	Converter MarkdownConverter
 }
 
 type MarkdownElement struct {
@@ -29,6 +30,8 @@ type Inline struct {
 }
 
 type MarkdownConverter interface {
+	Header() string
+	Footer() string
 	ToH1(content []Inline) string
 	ToH2(content []Inline) string
 	ToH3(content []Inline) string

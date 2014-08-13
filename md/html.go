@@ -8,6 +8,18 @@ import "strings"
 type HtmlConverter struct {
 }
 
+func (c *HtmlConverter) Header() string {
+	return `<html>
+<head>
+</head>
+<body>`
+}
+
+func (c *HtmlConverter) Footer() string {
+	return `</body>
+</html>`
+}
+
 func (c *HtmlConverter) ToH1(content []Inline) string {
 	return "<h1>" + c.constructInlines(content) + "</h1>"
 }

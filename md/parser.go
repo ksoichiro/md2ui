@@ -16,12 +16,19 @@ type parseAttr struct {
 	Eol             bool
 }
 
-func Convert(elements *[]MarkdownElement) (result []string) {
+func Convert(m *Markdown) (result []string) {
+	result = append(result, m.Converter.Header())
+	result = append(result, convertBody(&m.Elements)...)
+	result = append(result, m.Converter.Footer())
+	return
+}
+
+func convertBody(elements *[]MarkdownElement) (result []string) {
 	for _, e := range *elements {
 		if 0 < len(e.Children) {
 			o, c := e.BlockConverterFunc()
 			result = append(result, o)
-			result = append(result, Convert(&(e.Children))...)
+			result = append(result, convertBody(&(e.Children))...)
 			result = append(result, c)
 		} else if e.ConverterFunc != nil {
 			result = append(result, e.ConverterFunc(e.Values))
@@ -42,6 +49,7 @@ func ParseFile(path string, c MarkdownConverter) (md Markdown) {
 }
 
 func Parse(lines string, c MarkdownConverter) (md Markdown) {
+	md.Converter = c
 	attr := parseAttr{BlockQuoteLevel: 0}
 	index := 0
 	ss := strings.Split(lines, "\n")
