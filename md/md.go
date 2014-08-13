@@ -19,10 +19,12 @@ type ConverterFunc func(values []Inline) string
 type BlockConverterFunc func() (openWrapper, closeWrapper string)
 
 type Inline struct {
-	Href    string
-	Value   string
-	NewLine bool
-	Eol     bool
+	Href     string
+	Strong   bool
+	Value    string
+	Children []Inline
+	NewLine  bool
+	Eol      bool
 }
 
 type MarkdownConverter interface {

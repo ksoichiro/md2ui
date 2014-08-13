@@ -160,16 +160,45 @@ func parseInlineWithOption(content string, attr *parseAttr) (result []Inline) {
 		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
 		groups := exp.FindStringSubmatch(tmp)
 		if groups == nil || len(groups) < 1 {
-			result = append(result, Inline{Value: tmp})
+			result = append(result, parseInlineStyle(tmp)...)
 			break
 		} else {
-			result = append(result, Inline{Value: groups[1]})
-			result = append(result, Inline{Href: groups[3], Value: groups[2]})
+			result = append(result, parseInlineStyle(groups[1])...)
+			result = append(result, Inline{Href: groups[3], Children: parseInlineStyle(groups[2])})
 			tmp = groups[4]
 		}
 	}
 	if attr != nil && attr.Eol && 0 < len(result) {
 		result[len(result)-1].Eol = true
+	}
+	return result
+}
+
+func parseInlineStyle(content string) (result []Inline) {
+	strongBegan := false
+	buf := ""
+	stars := ""
+	for _, c := range strings.Split(content, "") {
+		if c == "*" {
+			stars += c
+			if len(stars) == 2 {
+				if strongBegan {
+					strongBegan = false
+					result = append(result, Inline{Strong: true, Children: parseInlineStyle(buf)})
+					buf = ""
+					stars = ""
+				} else {
+					strongBegan = true
+				}
+				stars = ""
+			}
+		} else {
+			buf += stars + c
+			stars = ""
+		}
+	}
+	if buf != "" {
+		result = append(result, Inline{Value: buf})
 	}
 	return result
 }

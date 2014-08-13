@@ -45,8 +45,10 @@ func (c *HtmlConverter) constructInlines(content []Inline) string {
 	for _, i := range content {
 		if i.NewLine {
 			s += "<br />\n"
+		} else if i.Strong {
+			s += "<strong>" + c.constructInlines(i.Children) + "</strong>"
 		} else if i.Href != "" {
-			s += "<a href=\"" + i.Href + "\">" + i.Value + "</a>"
+			s += "<a href=\"" + i.Href + "\">" + c.constructInlines(i.Children) + "</a>"
 		} else {
 			s += i.Value
 		}
