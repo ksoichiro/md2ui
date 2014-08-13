@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+    </style>
+    <style name="MarkdownH1"></style>
+    <style name="MarkdownH2"></style>
+    <style name="MarkdownH3"></style>
+    <style name="MarkdownH4"></style>
+    <style name="MarkdownH5"></style>
+    <style name="MarkdownH6"></style>
+    <style name="MarkdownP"></style>
+</resources>
