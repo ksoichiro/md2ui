@@ -8,11 +8,15 @@ type Markdown struct {
 }
 
 type MarkdownElement struct {
-	ConverterFunc ConverterFunc
-	Values        []Inline
+	ConverterFunc      ConverterFunc
+	BlockConverterFunc BlockConverterFunc
+	Values             []Inline
+	Children           []MarkdownElement
+	BlockQuote         bool
 }
 
 type ConverterFunc func(values []Inline) string
+type BlockConverterFunc func() (openWrapper, closeWrapper string)
 
 type Inline struct {
 	Href    string
@@ -29,4 +33,5 @@ type MarkdownConverter interface {
 	ToH5(content []Inline) string
 	ToH6(content []Inline) string
 	ToP(content []Inline) string
+	ToBlockQuote() (openWrapper, closeWrapper string)
 }

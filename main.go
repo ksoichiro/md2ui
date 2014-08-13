@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/ksoichiro/md2ui/md"
 )
@@ -33,7 +34,5 @@ func main() {
 
 	result := md.ParseFile(*in, c)
 
-	for _, e := range result.Elements {
-		fmt.Println(e.ConverterFunc(e.Values))
-	}
+	fmt.Println(strings.Join(md.Convert(&result.Elements), "\n"))
 }

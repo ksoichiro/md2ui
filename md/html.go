@@ -36,6 +36,10 @@ func (c *HtmlConverter) ToP(content []Inline) string {
 	return "<p>" + c.constructInlines(content) + "</p>"
 }
 
+func (c *HtmlConverter) ToBlockQuote() (string, string) {
+	return "<blockquote>", "</blockquote>"
+}
+
 func (c *HtmlConverter) constructInlines(content []Inline) string {
 	s := ""
 	for _, i := range content {

@@ -11,6 +11,25 @@ import (
 	"strings"
 )
 
+type parseAttr struct {
+	BlockQuoteLevel int
+	Eol             bool
+}
+
+func Convert(elements *[]MarkdownElement) (result []string) {
+	for _, e := range *elements {
+		if 0 < len(e.Children) {
+			o, c := e.BlockConverterFunc()
+			result = append(result, o)
+			result = append(result, Convert(&(e.Children))...)
+			result = append(result, c)
+		} else if e.ConverterFunc != nil {
+			result = append(result, e.ConverterFunc(e.Values))
+		}
+	}
+	return
+}
+
 func ParseFile(path string, c MarkdownConverter) (md Markdown) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -23,67 +42,119 @@ func ParseFile(path string, c MarkdownConverter) (md Markdown) {
 }
 
 func Parse(lines string, c MarkdownConverter) (md Markdown) {
+	attr := parseAttr{BlockQuoteLevel: 0}
+	index := 0
+	ss := strings.Split(lines, "\n")
+	parseInternal(&ss, &index, &md.Elements, &attr, c)
+	return
+}
+
+func parseInternal(lines *[]string, index *int, elements *[]MarkdownElement, attr *parseAttr, c MarkdownConverter) {
 	buf := []Inline{}
-	for _, s := range strings.Split(lines, "\n") {
+	for {
+		if len(*lines) <= *index {
+			break
+		}
+		s := (*lines)[*index]
+		// Check current block depth
+		blockQuoteLevel := 0
+		for {
+			if strings.HasPrefix(s, ">") {
+				s = strings.TrimPrefix(s, ">")
+				blockQuoteLevel++
+			} else if strings.HasPrefix(s, " ") {
+				s = strings.TrimPrefix(s, " ")
+			} else {
+				break
+			}
+		}
+		if blockQuoteLevel > attr.BlockQuoteLevel {
+			// Go down
+			if 0 < len(buf) {
+				*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
+				buf = []Inline{}
+			}
+			attr.BlockQuoteLevel++
+			me := MarkdownElement{BlockConverterFunc: c.ToBlockQuote, BlockQuote: true}
+			// Parse as child elements
+			parseInternal(lines, index, &me.Children, attr, c)
+			*elements = append(*elements, me)
+			continue
+		} else if blockQuoteLevel < attr.BlockQuoteLevel {
+			// Go up
+			if strings.Trim(s, " ") == "" {
+				attr.BlockQuoteLevel--
+				break
+			}
+			*index++
+		} else {
+			*index++
+		}
 		if strings.HasPrefix(s, "######") {
 			// H6
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH6, Values: parseInline(trimHeaderChars(s))})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH6, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "#####") {
 			// H5
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH5, Values: parseInline(trimHeaderChars(s))})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH5, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "####") {
 			// H4
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH4, Values: parseInline(trimHeaderChars(s))})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH4, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "###") {
 			// H3
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH3, Values: parseInline(trimHeaderChars(s))})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH3, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "##") {
 			// H2
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: parseInline(trimHeaderChars(s))})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH2, Values: parseInline(trimHeaderChars(s))})
 		} else if strings.HasPrefix(s, "#") {
 			// H1
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: parseInline(trimHeaderChars(s))})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH1, Values: parseInline(trimHeaderChars(s))})
 		} else if s == "" {
 			if 0 < len(buf) {
 				// End of paragraph
-				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
+				*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
 				buf = []Inline{}
 			}
 		} else if 0 < len(buf) && strings.Replace(s, "=", "", -1) == "" {
 			// Last line is H1
 			if 1 < len(buf) {
-				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf[:len(buf)-1]})
+				*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf[:len(buf)-1]})
 			}
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH1, Values: buf[len(buf)-1:]})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH1, Values: buf[len(buf)-1:]})
 			buf = []Inline{}
 		} else if 0 < len(buf) && strings.Replace(s, "-", "", -1) == "" {
 			// Last line is H2
 			if 1 < len(buf) {
-				md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf[:len(buf)-1]})
+				*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf[:len(buf)-1]})
 			}
-			md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToH2, Values: buf[len(buf)-1:]})
+			*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToH2, Values: buf[len(buf)-1:]})
 			buf = []Inline{}
 		} else {
 			// P
-			if strings.HasSuffix(s, "  ") {
-				// New line
-				buf = append(buf, parseInline(strings.TrimSuffix(s, "  "))...)
-				buf = append(buf, Inline{NewLine: true})
-			} else {
-				buf = append(buf, parseInlineWithEol(s, true)...)
-			}
+			parseMultiline(s, &buf, attr)
 		}
 	}
 	if 0 < len(buf) {
-		md.Elements = append(md.Elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
+		*elements = append(*elements, MarkdownElement{ConverterFunc: c.ToP, Values: buf})
 	}
 	return
 }
 
-func parseInline(content string) (result []Inline) {
-	return parseInlineWithEol(content, false)
+func parseMultiline(s string, buf *[]Inline, attr *parseAttr) {
+	if strings.HasSuffix(s, "  ") {
+		// New line
+		*buf = append(*buf, parseInlineWithOption(strings.TrimSuffix(s, "  "), attr)...)
+		*buf = append(*buf, Inline{NewLine: true})
+	} else {
+		attr.Eol = true
+		*buf = append(*buf, parseInlineWithOption(s, attr)...)
+		attr.Eol = false
+	}
 }
-func parseInlineWithEol(content string, appendEol bool) (result []Inline) {
+
+func parseInline(content string) (result []Inline) {
+	return parseInlineWithOption(content, nil)
+}
+func parseInlineWithOption(content string, attr *parseAttr) (result []Inline) {
 	tmp := content
 	for {
 		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
@@ -97,7 +168,7 @@ func parseInlineWithEol(content string, appendEol bool) (result []Inline) {
 			tmp = groups[4]
 		}
 	}
-	if appendEol && 0 < len(result) {
+	if attr != nil && attr.Eol && 0 < len(result) {
 		result[len(result)-1].Eol = true
 	}
 	return result
