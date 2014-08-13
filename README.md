@@ -22,7 +22,8 @@ This will print HTML from `test.md`.
 
 Converter can be specify with option `-lang`.
 
-* HTML
+* HTML(`-lang html`)
+* Android XML (`-lang android`)
 
 ## License
 
