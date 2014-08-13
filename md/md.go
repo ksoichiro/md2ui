@@ -20,6 +20,7 @@ type BlockConverterFunc func() (openWrapper, closeWrapper string)
 
 type Inline struct {
 	Href     string
+	Title    string
 	Strong   bool
 	Value    string
 	Children []Inline

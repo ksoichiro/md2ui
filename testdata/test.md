@@ -1,3 +1,5 @@
+# [md2ui](https://github.com/ksoichiro/md2ui) sample
+
 # H1 header
 
 ## H2 header
@@ -52,7 +54,7 @@ This is paragraph.
 H2 header
 ---
 
-**A* standard*** paragraph made by [**Markdown**](http://daringfireball.net/projects/markdown/).
+**A* standard*** paragraph made by [**Markdown**](http://daringfireball.net/projects/markdown/ "The Markdown").
 This line will be merged into the first line.  
 And this will be the second line.
 

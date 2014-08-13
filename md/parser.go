@@ -157,15 +157,15 @@ func parseInline(content string) (result []Inline) {
 func parseInlineWithOption(content string, attr *parseAttr) (result []Inline) {
 	tmp := content
 	for {
-		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\)]*)\\)(.*)$")
+		exp := regexp.MustCompile("^(.*)\\[([^\\]]*)\\]\\(([^\\) ]*)( +\"([^\"]*)\")?\\)(.*)$")
 		groups := exp.FindStringSubmatch(tmp)
 		if groups == nil || len(groups) < 1 {
 			result = append(result, parseInlineStyle(tmp)...)
 			break
 		} else {
 			result = append(result, parseInlineStyle(groups[1])...)
-			result = append(result, Inline{Href: groups[3], Children: parseInlineStyle(groups[2])})
-			tmp = groups[4]
+			result = append(result, Inline{Href: groups[3], Title: groups[5], Children: parseInlineStyle(groups[2])})
+			tmp = groups[6]
 		}
 	}
 	if attr != nil && attr.Eol && 0 < len(result) {

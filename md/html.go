@@ -48,7 +48,13 @@ func (c *HtmlConverter) constructInlines(content []Inline) string {
 		} else if i.Strong {
 			s += "<strong>" + c.constructInlines(i.Children) + "</strong>"
 		} else if i.Href != "" {
-			s += "<a href=\"" + i.Href + "\">" + c.constructInlines(i.Children) + "</a>"
+			s += "<a href=\"" + i.Href
+			if i.Title != "" {
+				s += "\" title=\"" + i.Title + "\""
+			} else {
+				s += "\""
+			}
+			s += ">" + c.constructInlines(i.Children) + "</a>"
 		} else {
 			s += i.Value
 		}
