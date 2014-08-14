@@ -2,3 +2,5 @@
 local.properties
 build/
 src/main/res/layout/activity_top.xml
+.idea/
+*.iml

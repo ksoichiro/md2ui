@@ -2,11 +2,25 @@
 <resources>
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
     </style>
-    <style name="MarkdownH1"></style>
-    <style name="MarkdownH2"></style>
-    <style name="MarkdownH3"></style>
-    <style name="MarkdownH4"></style>
-    <style name="MarkdownH5"></style>
-    <style name="MarkdownH6"></style>
-    <style name="MarkdownP"></style>
+    <style name="MarkdownH1">
+        <item name="android:textSize">28sp</item>
+    </style>
+    <style name="MarkdownH2">
+        <item name="android:textSize">26sp</item>
+    </style>
+    <style name="MarkdownH3">
+        <item name="android:textSize">24sp</item>
+    </style>
+    <style name="MarkdownH4">
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="MarkdownH5">
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="MarkdownH6">
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="MarkdownP">
+        <item name="android:textSize">14sp</item>
+    </style>
 </resources>
